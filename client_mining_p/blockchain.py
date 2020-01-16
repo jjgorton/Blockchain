@@ -109,6 +109,7 @@ class Blockchain(object):
         """
         guess = f'{block_string}{proof}'.encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
+        # print(guess_hash)
         return guess_hash[:6] == '000000'
 
 # Instantiate our Node
@@ -123,26 +124,20 @@ blockchain = Blockchain()
 @app.route('/mine', methods=['POST'])
 def mine():
     data = request.get_json()
-    if data.proof and data.id:
-        if blockchain.last_block.id == data.id:
-            block_string = json.dumps(blockchain.last_block)
-            if blockchain.valid_proof(block_string, data.proof):
-                proof = data.proof
-                previous_hash = blockchain.hash(blockchain.last_block)
-                block = blockchain.new_block(proof, previous_hash)
-                response = {
-                'message': 'Success!',
-                'block': block
-                }
-                return jsonify(response), 201
-            else:
-                response = {
-                    'message': 'Proof Failure.'
-                }
-                return jsonify(response), 400
+    if data['proof'] and data['id']:
+        proof = data['proof']
+        block_string = json.dumps(blockchain.last_block,sort_keys=True)
+        if blockchain.valid_proof(block_string, proof):
+            previous_hash = blockchain.hash(blockchain.last_block)
+            block = blockchain.new_block(proof, previous_hash)
+            response = {
+            'message': 'New Block Forged',
+            'block': block
+            }
+            return jsonify(response), 201
         else:
             response = {
-                'message': 'ID does not match last Block'
+                'message': 'Proof Failure.'
             }
             return jsonify(response), 400
     else: 
